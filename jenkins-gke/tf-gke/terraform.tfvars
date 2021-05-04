@@ -1,7 +1,7 @@
 
 
-project_id = "playground-s-11-4d96fe3f"
-tfstate_gcs_backend = "playground-s-11-4d96fe3f-tfstate"
+project_id = "playground-s-11-9732c03a"
+tfstate_gcs_backend = "playground-s-11-9732c03a-tfstate"
 region = "us-east4"
 zones = ["us-east4-a"]
 ip_range_pods_name = "ip-range-pods"
