@@ -86,14 +86,15 @@ module "jenkins-gke" {
   logging_service          = "logging.googleapis.com/kubernetes"
   monitoring_service       = "monitoring.googleapis.com/kubernetes"
   remove_default_node_pool = true
-  service_account          = "create"
+  service_account          = "terraform-sa@playground-s-11-4d96fe3f.iam.gserviceaccount.com"
   identity_namespace       = "${module.enables-google-apis.project_id}.svc.id.goog"
   node_metadata            = "GKE_METADATA_SERVER"
   node_pools = [
     {
       name         = "butler-pool"
-      min_count    = 3
-      max_count    = 6
+      min_count    = 1
+      max_count    = 2
+      preemptible  = true
       auto_upgrade = true
     }
   ]
