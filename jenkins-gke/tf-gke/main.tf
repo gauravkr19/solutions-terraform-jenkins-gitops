@@ -7,6 +7,8 @@ container.googleapis.com
 storage-component.googleapis.com
 logging.googleapis.com
 monitoring.googleapis.com
+serviceusage.googleapis.com
+gcurl "https://serviceusage.googleapis.com/v1/projects/${PROJECT_NUMBER}/services?filter=state:DISABLED"
 */
 
 /*****************************************
