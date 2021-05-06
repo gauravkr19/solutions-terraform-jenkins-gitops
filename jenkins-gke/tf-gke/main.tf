@@ -64,8 +64,25 @@ module "jenkins-vpc" {
   }
 }
 
+# Access to Nodepool VMs
+resource "google_compute_firewall" "default" {
+  name    = "nodepool-firewall"
+  network = module.jenkins-vpc.network_name
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22", "80", "8080", "1000-2000"]
+  }
+
+  source_tags = ["gke-jenkins"]
+}
+
 /*****************************************
-  Jenkins GKE
+  Jenkins GKE; add disk size; check count:
  *****************************************/
 module "jenkins-gke" {
   source                   = "terraform-google-modules/kubernetes-engine/google//modules/beta-public-cluster/"
