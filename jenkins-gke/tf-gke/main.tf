@@ -179,7 +179,7 @@ resource "google_project_iam_member" "jenkins-project" {
 
 }
 
-data "local_file" "helm_chart_values" {
+/* data "local_file" "helm_chart_values" {
   filename = "${path.module}/values.yaml"
 }
 
@@ -196,3 +196,4 @@ resource "helm_release" "jenkins" {
     kubernetes_secret.gh-secrets,
   ]
 }
+ */
