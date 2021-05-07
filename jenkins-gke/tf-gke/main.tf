@@ -74,6 +74,7 @@ resource "google_project_iam_member" "gke" {
   project = module.enables-google-apis.project_id
   role    = "roles/owner"
   member = "serviceAccount:${google_service_account.jenkins.email}"
+}
 
 /*****************************************
   Jenkins GKE;
