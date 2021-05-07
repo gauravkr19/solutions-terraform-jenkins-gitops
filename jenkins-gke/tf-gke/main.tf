@@ -68,7 +68,6 @@ module "jenkins-vpc" {
 resource "google_compute_firewall" "default" {
   name         = "nodepool-firewall"
   network      = module.jenkins-vpc.network_name
-  project_id   = module.enables-google-apis.project_id
 
   allow {
     protocol = "icmp"
