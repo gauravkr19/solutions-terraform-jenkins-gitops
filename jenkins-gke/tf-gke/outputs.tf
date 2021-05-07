@@ -31,10 +31,10 @@ output "ca_certificate" {
   value       = module.jenkins-gke.ca_certificate
 }
 
-output "service_account" {
-  description = "The default service account used for running nodes."
-  value       = module.jenkins-gke.service_account
-}
+# output "service_account" {
+#   description = "The default service account used for running nodes."
+#   value       = module.jenkins-gke.service_account
+# }
 
 output "cluster_name" {
   description = "Cluster name"
