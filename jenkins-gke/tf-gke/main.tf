@@ -67,6 +67,7 @@ module "jenkins-vpc" {
 resource "google_service_account" "jenkins" {
   account_id   = "gke-owner"
   display_name = "Service Account"
+  project = module.enables-google-apis.project_id
 }
 
 # allow GKE Project Owner for time being
