@@ -64,17 +64,29 @@ module "jenkins-vpc" {
   }
 }
 
-resource "google_service_account" "jenkins" {
-  account_id   = "gke-owner"
-  display_name = "Service Account"
-  project = module.enables-google-apis.project_id
-}
+# Access to Nodepool VMs
+resource "google_compute_firewall" "default" {
+  name         = "nodepool-firewall"
+  network      = module.jenkins-vpc.network_name
+  project_id   = module.enables-google-apis.project_id
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22", "80", "8080"]
+  }
+
+  source_ranges = ["65.2.57.204/32"]
+} 
 
 # allow GKE Project Owner for time being
 resource "google_project_iam_member" "gke" {
   project = module.enables-google-apis.project_id
   role    = "roles/owner"
-  member = "serviceAccount:${google_service_account.jenkins.email}"
+  member = "serviceAccount:${module.jenkins-gke.service_account}"
 }
 
 /*****************************************
@@ -95,7 +107,7 @@ module "jenkins-gke" {
   logging_service          = "logging.googleapis.com/kubernetes"
   monitoring_service       = "monitoring.googleapis.com/kubernetes"
   remove_default_node_pool = true
-  service_account          = "google_service_account.jenkins.email"
+  service_account          = "create"
 # identity_namespace       = "${module.enables-google-apis.project_id}.svc.id.goog"
   node_metadata            = "EXPOSE"
   node_pools = [
@@ -128,7 +140,7 @@ resource "kubernetes_secret" "jenkins-secrets" {
     project_id          = module.enables-google-apis.project_id
     kubernetes_endpoint = "https://${module.jenkins-gke.endpoint}"
     ca_certificate      = module.jenkins-gke.ca_certificate
-    jenkins_tf_ksa      = google_service_account.jenkins.name
+    jenkins_tf_ksa      = "module.jenkins-gke.service_account"
   }
 }
 
