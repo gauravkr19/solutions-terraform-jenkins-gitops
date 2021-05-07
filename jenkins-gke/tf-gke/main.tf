@@ -127,7 +127,7 @@ resource "kubernetes_secret" "jenkins-secrets" {
     project_id          = module.enables-google-apis.project_id
     kubernetes_endpoint = "https://${module.jenkins-gke.endpoint}"
     ca_certificate      = module.jenkins-gke.ca_certificate
-    jenkins_tf_ksa      = module.workload_identity.k8s_service_account_name
+    jenkins_tf_ksa      = google_service_account.jenkins.name
   }
 }
 
