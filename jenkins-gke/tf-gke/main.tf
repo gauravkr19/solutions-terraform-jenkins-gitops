@@ -179,12 +179,10 @@ resource "google_storage_bucket_iam_member" "tf-state-writer" {
 resource "google_project_iam_member" "jenkins-project" {
   project = module.enables-google-apis.project_id
   role    = "roles/editor"
-
   member = module.workload_identity.gcp_service_account_fqn
-
 }
 
-/* data "local_file" "helm_chart_values" {
+data "local_file" "helm_chart_values" {
   filename = "${path.module}/values.yaml"
 }
 resource "helm_release" "jenkins" {
@@ -198,4 +196,4 @@ resource "helm_release" "jenkins" {
     kubernetes_secret.gh-secrets,
   ]
 }
- */
+
