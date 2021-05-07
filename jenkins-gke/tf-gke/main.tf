@@ -64,7 +64,7 @@ module "jenkins-vpc" {
   }
 }
 
-# Access to Nodepool VMs
+/* # Access to Nodepool VMs
 resource "google_compute_firewall" "default" {
   name    = "nodepool-firewall"
   network = module.jenkins-vpc.network_name
@@ -79,7 +79,7 @@ resource "google_compute_firewall" "default" {
   }
 
   source_ranges = ["65.2.57.204/32"]
-}
+} */
 
 /*****************************************
   Jenkins GKE; add disk size; check count:
