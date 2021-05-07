@@ -64,25 +64,19 @@ module "jenkins-vpc" {
   }
 }
 
-/* # Access to Nodepool VMs
-resource "google_compute_firewall" "default" {
-  name    = "nodepool-firewall"
-  network = module.jenkins-vpc.network_name
+resource "google_service_account" "jenkins" {
+  account_id   = "gke-owner"
+  display_name = "Service Account"
+}
 
-  allow {
-    protocol = "icmp"
-  }
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22", "80", "8080"]
-  }
-
-  source_ranges = ["65.2.57.204/32"]
-} */
+# allow GKE Project Owner for time being
+resource "google_project_iam_member" "gke" {
+  project = module.enables-google-apis.project_id
+  role    = "roles/owner"
+  member = "serviceAccount:${google_service_account.jenkins.email}"
 
 /*****************************************
-  Jenkins GKE; add disk size; check count:
+  Jenkins GKE;
  *****************************************/
 module "jenkins-gke" {
   source                   = "terraform-google-modules/kubernetes-engine/google//modules/beta-public-cluster/"
@@ -99,9 +93,9 @@ module "jenkins-gke" {
   logging_service          = "logging.googleapis.com/kubernetes"
   monitoring_service       = "monitoring.googleapis.com/kubernetes"
   remove_default_node_pool = true
-  service_account          = "create"
-  identity_namespace       = "${module.enables-google-apis.project_id}.svc.id.goog"
-  node_metadata            = "GKE_METADATA_SERVER"
+  service_account          = "google_service_account.jenkins.email"
+# identity_namespace       = "${module.enables-google-apis.project_id}.svc.id.goog"
+  node_metadata            = "EXPOSE"
   node_pools = [
     {
       name               = "butler-pool"
@@ -113,41 +107,9 @@ module "jenkins-gke" {
       disk_size_gb       = 20
       disk_type          = "pd-standard"
       image_type         = "COS"
-      auto_repair        = true
-      auto_upgrade       = true      
-
+      auto_repair        = true    
     }
   ]
-}
-
-/*****************************************
-  IAM Bindings GKE SVC
- *****************************************/
-# allow GKE to pull images from GCR
-resource "google_project_iam_member" "gke" {
-  project = module.enables-google-apis.project_id
-  role    = "roles/storage.objectViewer"
-
-  member = "serviceAccount:${module.jenkins-gke.service_account}"
-}
-
-/*****************************************
-  Jenkins Workload Identity
- *****************************************/
-module "workload_identity" {
-  source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
-  version             = "~> 7.0"
-  project_id          = module.enables-google-apis.project_id
-  name                = "jenkins-wi-${module.jenkins-gke.name}"
-  namespace           = "default"
-  use_existing_k8s_sa = false
-}
-
-# enable GSA to add and delete pods for jenkins builders
-resource "google_project_iam_member" "cluster-dev" {
-  project = module.enables-google-apis.project_id
-  role    = "roles/container.developer"
-  member  = module.workload_identity.gcp_service_account_fqn
 }
 
 data "google_client_config" "default" {
@@ -182,42 +144,74 @@ resource "kubernetes_secret" "gh-secrets" {
   }
 }
 
-/*****************************************
-  Grant Jenkins SA Permissions to store
-  TF state for Jenkins Pipelines
- *****************************************/
-resource "google_storage_bucket_iam_member" "tf-state-writer" {
-  bucket = var.tfstate_gcs_backend
-  role   = "roles/storage.admin"
-  member = module.workload_identity.gcp_service_account_fqn
-}
 
-/*****************************************
-  Grant Jenkins SA Permissions project editor
- *****************************************/
-resource "google_project_iam_member" "jenkins-project" {
-  project = module.enables-google-apis.project_id
-  role    = "roles/editor"
+# /*****************************************
+#   Jenkins Workload Identity
+#  *****************************************/
+# module "workload_identity" {
+#   source              = "terraform-google-modules/kubernetes-engine/google//modules/workload-identity"
+#   version             = "~> 7.0"
+#   project_id          = module.enables-google-apis.project_id
+#   name                = "jenkins-wi-${module.jenkins-gke.name}"
+#   namespace           = "default"
+#   use_existing_k8s_sa = false
+# }
 
-  member = module.workload_identity.gcp_service_account_fqn
+# /*****************************************
+#   IAM Bindings GKE SVC
+#  *****************************************/
+# # allow GKE to pull images from GCR
+# resource "google_project_iam_member" "gke" {
+#   project = module.enables-google-apis.project_id
+#   role    = "roles/storage.objectViewer"
 
-}
+#   member = "serviceAccount:${module.jenkins-gke.service_account}"
+# }
 
-/* data "local_file" "helm_chart_values" {
-  filename = "${path.module}/values.yaml"
-}
+# # enable GSA to add and delete pods for jenkins builders
+# resource "google_project_iam_member" "cluster-dev" {
+#   project = module.enables-google-apis.project_id
+#   role    = "roles/container.developer"
+#   member  = module.workload_identity.gcp_service_account_fqn
+# }
 
-resource "helm_release" "jenkins" {
-  name       = "jenkins"
-  repository = "https://charts.jenkins.io"
-  chart      = "jenkins"
- # version    = "1.9.18"
-  timeout    = 1200
 
-  values = [data.local_file.helm_chart_values.content]
+# /*****************************************
+#   Grant Jenkins SA Permissions to store
+#   TF state for Jenkins Pipelines
+#  *****************************************/
+# resource "google_storage_bucket_iam_member" "tf-state-writer" {
+#   bucket = var.tfstate_gcs_backend
+#   role   = "roles/storage.admin"
+#   member = module.workload_identity.gcp_service_account_fqn
+# }
 
-  depends_on = [
-    kubernetes_secret.gh-secrets,
-  ]
-}
- */
+# /*****************************************
+#   Grant Jenkins SA Permissions project editor
+#  *****************************************/
+# resource "google_project_iam_member" "jenkins-project" {
+#   project = module.enables-google-apis.project_id
+#   role    = "roles/editor"
+
+#   member = module.workload_identity.gcp_service_account_fqn
+
+# }
+
+
+# data "local_file" "helm_chart_values" {
+#   filename = "${path.module}/values.yaml"
+# }
+
+# resource "helm_release" "jenkins" {
+#   name       = "jenkins"
+#   repository = "https://charts.jenkins.io"
+#   chart      = "jenkins"
+#  # version    = "1.9.18"
+#   timeout    = 1200
+
+#   values = [data.local_file.helm_chart_values.content]
+
+#   depends_on = [
+#     kubernetes_secret.gh-secrets,
+#   ]
+# }
