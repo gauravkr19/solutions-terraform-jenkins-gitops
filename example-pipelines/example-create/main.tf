@@ -57,7 +57,7 @@ resource "google_compute_instance" "vm_0001" {
   machine_type = "f1-micro"
   
   scheduling {
-    preemtible = true
+    preemptible = true
   }
 
   network_interface {
