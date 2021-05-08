@@ -19,7 +19,7 @@
  *****************************************/
 locals {
   vpc_network_name = "example-vpc-${var.environment}"
-  vm_name = "example-vm-${var.environment}-new"
+  vm_name = "example-vm-${var.environment}-three"
 }
 
 /*****************************************
@@ -57,7 +57,7 @@ resource "google_compute_instance" "vm_0001" {
   machine_type = "f1-micro"
   
   scheduling {
-    preemtible = true
+    preemptible = true
   }
 
   network_interface {
