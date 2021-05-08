@@ -58,6 +58,7 @@ resource "google_compute_instance" "vm_0001" {
   
   scheduling {
     preemptible = true
+    automatic_restart = false
   }
 
   network_interface {
